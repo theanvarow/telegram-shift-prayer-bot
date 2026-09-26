@@ -1,80 +1,80 @@
-# 🤖 Telegram Shift & Prayer Times Bot (Google Apps Script)
+# 🤖 Telegram-бот графиков смен и времени намаза (Google Apps Script)
 
-Telegram boti Google Sheets jadvalidagi ish smenalarini va Toshkent shahri bo‘yicha namoz vaqtlarini avtomatik eslatib turish uchun mo‘ljallangan. Server talab qilmaydi — to‘liq **Google Apps Script** platformasida bepul ishlaydi.
-
----
-
-## ✨ Imkoniyatlari (Features)
-
-1. **📋 Smena hisoboti (Google Sheets integratsiyasi):**
-   - Har kuni ertalab soat **09:00** da bugungi kunduzgi va tungi smena xodimlarini jadvaldan olib, Telegram guruhiga avtomatik yuboradi.
-   - Guruhda yoki shaxsiy chatda buyruqlar orqali ko‘rish:
-     - `/today` yoki `/bugun` — Bugungi smena.
-     - `/tomorrow` yoki `/ertaga` — Ertangi smena.
-     - `/date dd/MM/yy` — Istalgan sana bo‘yicha smena.
-
-2. **🕌 Namoz vaqtlari eslatmasi (Toshkent vaqti):**
-   - Har bir namoz vaqti (Bomdod, Peshin, Asr, Shom, Xufton) kirgan aniq daqiqada guruhga qisqa eslatma xabarini yuboradi.
-   - Har namoz uchun kuniga faqat 1 marta yuboriladi (anti-dubl mexanizmi).
-   - O‘zbekiston Musulmonlari Idorasi rasmiy taqvimi bo‘yicha `namozvaqti.uz` bilan integratsiya qilingan (har kuni avtomatik yangilanadi).
-   - `/all`, `/namoz` yoki `/namaz` buyrug‘i orqali kunlik to‘liq namoz vaqtlarini ko‘rish mumkin.
-
-3. **🛡 Ishonchlilik & Xavfsizlik:**
-   - Google Apps Script 302 Redirect muammosini chetlab o‘tish uchun `HtmlService` qo‘llangan.
-   - Telegram takroriy so‘rovlarini filtrlash uchun `CacheService` orqali anti-dubl himoyasi.
-   - Tashqi sayt keshini chetlab o‘tish (anti-cache) filtri.
+Telegram-бот для автоматической отправки графиков смен сотрудников из Google Таблиц и напоминаний о наступлении времени намаза по Ташкенту. Работает полностью автономно и бесплатно на платформе **Google Apps Script** (отдельный сервер не требуется).
 
 ---
 
-## 🚀 O‘rnatish va Ishga tushirish (Setup Guide)
+## ✨ Основные возможности
 
-### 1. Google Sheets tayyorlash
-1. [Google Sheets](https://sheets.new) orqali yangi jadval oching.
-2. Varag‘ nomini `Лист1` deb nomlang.
-3. Ustunlarni quyidagi tartibda to‘ldiring (2-qatordan boshlab):
-   - **A ustun:** Sana (`dd/MM/yy` formatida, masalan: `26/09/26`)
-   - **B ustun:** Analitik / Mas'ul shaxs
-   - **C ustun:** Xodim ismi
-   - **D ustun:** Smena turi
-   - **E ustun:** Rejim (`день` yoki `ночь`)
+1. **📋 График смен (Интеграция с Google Sheets):**
+   - Ежедневно в **09:00** утра бот считывает актуальные данные из Google Таблицы и автоматически отправляет список дневной и ночной смены, а также дежурного аналитика в группу Telegram.
+   - Быстрый просмотр по командам (в группе или в ЛС):
+     - `/today` или `/bugun` — график смен на сегодня.
+     - `/tomorrow` или `/ertaga` — график смен на завтра.
+     - `/date ДД/ММ/ГГ` — смена на любую указанную дату (например: `/date 26/09/26`).
 
-### 2. Google Apps Script sozlash
-1. Google Sheets menyusidan **Kengaytmalar (Extensions)** ➔ **Apps Script** bo‘limiga kiring.
-2. `Code.js` faylidagi kodni to‘liq nusxalab, Apps Script muharririga joylang.
-3. Yuqoridagi sozlamalarni o‘zgartiring:
+2. **🕌 Напоминания о времени намаза (г. Ташкент):**
+   - В точную минуту наступления каждого из 5 обязательных намазов (Фаджр, Зухр, Аср, Магриб, Иша) бот автоматически отправляет короткое оповещение в группу.
+   - Защита от спама: оповещение по каждому намазу отправляется строго **1 раз в сутки**.
+   - Синхронизация с официальным расписанием Духовного управления мусульман Узбекистана через портал `namozvaqti.uz` с ежедневным автообновлением.
+   - Команды `/all`, `/namoz` или `/namaz` — вывод полного расписания на текущий день.
+
+3. **🛡 Стабильность и безопасность:**
+   - Использование `HtmlService` для обхода известной проблемы `302 Found (Redirect)` в вебхуках Telegram.
+   - Фильтрация дублирующихся запросов Telegram по `update_id` через `CacheService`.
+   - Механизм динамического обхода кеша (anti-cache) внешних сайтов.
+
+---
+
+## 🚀 Пошаговая инструкция по установке
+
+### 1. Подготовка Google Таблицы
+1. Создайте новую таблицу на [Google Sheets](https://sheets.new).
+2. Назовите рабочий лист **`Лист1`**.
+3. Заполните колонки со второй строки:
+   - **Колонка A:** Дата (формат: `ДД/ММ/ГГ`, например `26/09/26`)
+   - **Колонка B:** Аналитик / Ответственный
+   - **Колонка C:** Имя сотрудника
+   - **Колонка D:** Номер / название смены
+   - **Колонка E:** Режим (`день` или `ночь`)
+
+### 2. Добавление кода в Google Apps Script
+1. В таблице перейдите в меню: **Расширения (Extensions)** ➔ **Apps Script**.
+2. Вставьте содержимое файла `Code.js` в редактор.
+3. В начале скрипта укажите свои данные:
    ```javascript
-   const BOT_TOKEN     = 'SIZNING_BOT_TOKENINGIZ';
-   const GROUP_CHAT_ID = 'SIZNING_GURUH_CHAT_IDINGIZ';
+   const BOT_TOKEN     = 'ВАШ_TELEGRAM_BOT_TOKEN';
+   const GROUP_CHAT_ID = 'ВАШ_ID_ГРУППЫ_ИЛИ_ЧАТА';
    ```
-4. **Ctrl + S** (yoki Cmd + S) tugmasini bosib saqlang.
+4. Сохраните проект (**Ctrl + S** / **Cmd + S**).
 
-### 3. Deploy qilish (Web App)
-1. O‘ng yuqoridagi **Deploy** ➔ **New deployment** (yoki **Manage deployments**) tugmasini bosing.
-2. Turi: **Web app** ni tanlang.
-3. **Execute as:** `Me` (Sizning emailingiz).
-4. **Who has access:** `Anyone` (Hamma).
-5. **Deploy** tugmasini bosing va chiqqan **Web app URL** manzilidan nusxa oling (`https://script.google.com/macros/s/.../exec`).
+### 3. Развертывание (Web App)
+1. Нажмите кнопку **Начать развертывание (Deploy)** ➔ **Новое развертывание (New deployment)**.
+2. Выберите тип: **Веб-приложение (Web app)**.
+3. **Запуск от имени (Execute as):** `Я (Me)`.
+4. **У кого есть доступ (Who has access):** `Все (Anyone)`.
+5. Нажмите **Развернуть (Deploy)** и скопируйте полученный **URL веб-приложения** (`https://script.google.com/macros/s/.../exec`).
 
-### 4. Webhook va Triggerlarni yoqish
-1. Nusxalangan Web app URL manzilini `resetAndSetWebhook` funksiyasi ichidagi `webAppUrl` o‘zgaruvchisiga qo‘ying.
-2. Funksiyalar ro‘yxatidan **`resetAndSetWebhook`** ni tanlab, **Run** tugmasini bosing.
-3. Funksiyalar ro‘yxatidan **`setupMinuteTrigger`** ni tanlab, **Run** tugmasini bosing.
+### 4. Привязка вебхука и запуск таймера
+1. Вставьте скопированный URL в переменную `webAppUrl` внутри функции `resetAndSetWebhook`.
+2. В списке функций выберите **`resetAndSetWebhook`** и нажмите **Выполнить (Run)**.
+3. В списке функций выберите **`setupMinuteTrigger`** и нажмите **Выполнить (Run)**.
 
-Bo‘ldi! Bot to‘liq avtomatlashtirildi va har kuni mustaqil ishlaydi.
+Бот полностью настроен и готов к круглосуточной автономной работе!
 
 ---
 
-## 📌 Mavjud Buyruqlar
+## 📌 Список доступных команд
 
-| Buyruq | Tavsif |
+| Команда | Описание |
 |---|---|
-| `/all` / `/namoz` | Bugungi kunlik namoz vaqtlarini ko‘rish |
-| `/today` / `/bugun` | Bugungi smena ro‘yxatini ko‘rish |
-| `/tomorrow` / `/ertaga` | Ertangi smena ro‘yxatini ko‘rish |
-| `/date 26/09/26` | Berilgan sana bo‘yicha smenani ko‘rish |
-| `/ping` | Bot holatini tekshirish |
+| `/all` / `/namoz` / `/namaz` | Показать полное расписание намаза на сегодня |
+| `/today` / `/bugun` | Показать график смен на сегодня |
+| `/tomorrow` / `/ertaga` | Показать график смен на завтра |
+| `/date 26/09/26` | Показать график смен на выбранную дату |
+| `/ping` | Проверка связи с ботом |
 
 ---
 
-## 📄 Litsenziya
-MIT License.
+## 📄 Лицензия
+Распространяется под лицензией MIT.

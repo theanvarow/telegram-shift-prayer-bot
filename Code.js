@@ -1,18 +1,18 @@
 // ============================================================================
 // НАСТРОЙКИ (меняете только это)
 // ============================================================================
-const BOT_TOKEN       = 'YOUR_TELEGRAM_BOT_TOKEN';      // @BotFather orqali olingan token
-const GROUP_CHAT_ID   = 'YOUR_TELEGRAM_GROUP_CHAT_ID';  // Guruh yoki kanal ID raqami
+const BOT_TOKEN       = 'YOUR_TELEGRAM_BOT_TOKEN';      // Токен бота из @BotFather
+const GROUP_CHAT_ID   = 'YOUR_TELEGRAM_GROUP_CHAT_ID';  // ID группы или канала
 
-const SHEET_NAME      = 'Лист1';                        // Google Sheets varag'i nomi
-const DATA_START_ROW  = 2;                              // Ma'lumotlar boshlanadigan qator
-const TIME_ZONE       = 'Asia/Tashkent';                // Vaqt mintaqasi
+const SHEET_NAME      = 'Лист1';                        // Название листа в Google Таблице
+const DATA_START_ROW  = 2;                              // Строка, с которой начинаются данные
+const TIME_ZONE       = 'Asia/Tashkent';                // Часовой пояс
 
 // ВРЕМЯ ЕЖЕДНЕВНОЙ ОТПРАВКИ СМЕНЫ (Ташкент)
 const DAILY_HOUR      = 9;                              // 09:00
 const DAILY_MINUTE    = 0;
 
-const PRAYER_REGION   = 'Toshkent';                     // Shahar nomi
+const PRAYER_REGION   = 'Toshkent';                     // Город для расписания намаза
 
 // ============================================================================
 // 0) УТИЛИТЫ
@@ -46,7 +46,7 @@ function normalizeDateKey(input) {
 }
 
 // ============================================================================
-// 1) ANIQ NAMOZ VAQTLARINI OLISH (Anti-Cache bilan)
+// 1) ТОЧНОЕ РАСПИСАНИЕ НАМАЗА (с обходом кеширования)
 // ============================================================================
 function getPrayerTimesToday() {
   const props = PropertiesService.getScriptProperties();
@@ -60,7 +60,7 @@ function getPrayerTimesToday() {
     } catch(e) {}
   }
 
-  // 1-urinish: namozvaqti.uz (Sayt keshini chetlab o'tish uchun ?t= vaqt qo'shildi)
+  // 1-я попытка: namozvaqti.uz (с параметром ?t= для обхода кеша Cloudflare)
   try {
     const timestamp = new Date().getTime();
     const url = 'https://namozvaqti.uz/shahar/toshkent?t=' + timestamp;
@@ -102,10 +102,10 @@ function getPrayerTimesToday() {
       }
     }
   } catch(e) {
-    Logger.log('namozvaqti.uz xatosi: ' + e);
+    Logger.log('Ошибка namozvaqti.uz: ' + e);
   }
 
-  // 2-urinish zaxira: Aladhan API (Hanafi Toshkent)
+  // 2-я попытка резервная: Aladhan API (Ханафитский мазхаб, Ташкент)
   try {
     const res2 = UrlFetchApp.fetch('https://api.aladhan.com/v1/timingsByCity?city=Tashkent&country=Uzbekistan&method=14&school=1', { muteHttpExceptions: true });
     if (res2.getResponseCode() === 200) {
@@ -123,7 +123,7 @@ function getPrayerTimesToday() {
       return times;
     }
   } catch(e) {
-    Logger.log('Aladhan xatosi: ' + e);
+    Logger.log('Ошибка Aladhan: ' + e);
   }
 
   return null;
@@ -173,7 +173,7 @@ function isDuplicateUpdate(updateId) {
   const cache = CacheService.getScriptCache();
   const key = `upd_${updateId}`;
   if (cache.get(key)) return true;
-  cache.put(key, '1', 6 * 60 * 60);
+  cache.put(key, '1', 6 * 60 * 60); // 6 часов
   return false;
 }
 
@@ -233,7 +233,7 @@ function getShiftsForDate(dateKey) {
 }
 
 // ============================================================================
-// 5) ФОРМАТ RU
+// 5) ФОРМАТ СООБЩЕНИЯ О СМЕНЕ
 // ============================================================================
 function formatRU(dateKey, shifts) {
   const day   = shifts.filter(s => /день|kun|День/i.test(s.rejim));
@@ -260,7 +260,7 @@ function formatRU(dateKey, shifts) {
 }
 
 // ============================================================================
-// 6) TELEGRAM SEND
+// 6) ОТПРАВКА В TELEGRAM
 // ============================================================================
 function sendMessage(chatId, text) {
   const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage';
@@ -281,7 +281,7 @@ function sendMessage(chatId, text) {
 }
 
 // ============================================================================
-// 7) WEBHOOK HANDLER
+// 7) ОБРАБОТЧИК ВЕБХУКА (WEBHOOK HANDLER)
 // ============================================================================
 function doGet(e) {
   return HtmlService.createHtmlOutput('OK');
@@ -342,6 +342,7 @@ function doPost(e) {
     lock.releaseLock();
   }
 
+  // HtmlService исключает ошибку 302 Redirect в Telegram
   return HtmlService.createHtmlOutput('OK');
 }
 
@@ -373,19 +374,19 @@ function checkAndSendDaily() {
 }
 
 // ============================================================================
-// 9) WEBHOOK O'RNATISH
+// 9) УСТАНОВКА ВЕБХУКА
 // ============================================================================
 function resetAndSetWebhook() {
   UrlFetchApp.fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/deleteWebhook?drop_pending_updates=true', {
     muteHttpExceptions: true
   });
 
-  // Deploy qilingan Web App URL manzili
+  // URL развернутого веб-приложения
   const webAppUrl = 'YOUR_DEPLOYED_WEBAPP_URL';
 
   const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/setWebhook?url=' + encodeURIComponent(webAppUrl);
   const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-  Logger.log('Webhook natijasi: ' + res.getContentText());
+  Logger.log('Результат Webhook: ' + res.getContentText());
 }
 
 function setupMinuteTrigger() {
